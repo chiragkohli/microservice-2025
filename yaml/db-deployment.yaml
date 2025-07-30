@@ -1,3 +1,14 @@
+# 1. Create a Kubernetes secret for the MySQL root password
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  mysql-root-password: bXlzZWN1cmVwYXNzd29yZA==  # Base64 for "mysecurepassword"
+
+---
+# 2. MySQL Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,10 +30,42 @@ spec:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "yourpassword"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
         - name: MYSQL_DATABASE
-          value: "mydatabase"
+          value: demo_db
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: mysql-initdb
+        configMap:
+          name: mysql-init-scripts
+
 ---
+# 3. ConfigMap for initialization SQL script
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-scripts
+data:
+  insert-query.sql: |
+    CREATE TABLE IF NOT EXISTS customer_details (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      first_name VARCHAR(50),
+      last_name VARCHAR(50),
+      email VARCHAR(100),
+      phone_number VARCHAR(15)
+    );
+
+    INSERT INTO customer_details (first_name, last_name, email, phone_number) VALUES
+    ('Amit', 'Sharma', 'amit.sharma@example.com', '9876543210'),
+    ('Priya', 'Verma', 'priya.verma@example.com', '9876501234');
+
+---
+# 4. MySQL Service
 apiVersion: v1
 kind: Service
 metadata:
