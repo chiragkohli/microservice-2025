@@ -68,7 +68,7 @@ app.get('/records', (req, res) => {
         return;
     }
 
-    const query = 'SELECT * FROM customer_accounts';
+    const query = 'SELECT * FROM customer_details';
     dbConnection.query(query, (error, results) => {
         if (error) {
             console.error('Error fetching records:', error);
@@ -88,7 +88,7 @@ app.get('/formatted-records', (req, res) => {
 
     let offset = parseInt(req.query.offset) || 0;
 
-    dbConnection.query('SELECT * FROM customer_accounts LIMIT 5 OFFSET ?', [offset], (err, results) => {
+    dbConnection.query('SELECT * FROM customer_details LIMIT 5 OFFSET ?', [offset], (err, results) => {
         if (err) {
             console.error('Error executing query:', err);
             res.status(500).send('Something went wrong! Please try again later.');
@@ -111,7 +111,7 @@ app.get('/', (req, res) => {
     <h1>Hello, Welcome !!</h1>
     <p>Available APIs:</p>
     <ul>
-      <li><a href="/records">/records</a> - Get all records</li>
+      <li><a href="/records">Records</a> - Get all records</li>
       <li><a href="/formatted-records">Incremental records</a> - Show incremental records</li>
     </ul>
   `);
