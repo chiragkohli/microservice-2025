@@ -18,18 +18,13 @@ spec:
         ports:
         - containerPort: 3306
         env:
-        - name: MYSQL_ROOT_PASSWORD_FILE
-          value: "/run/secrets/mysql-root-password"
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
         - name: MYSQL_DATABASE
           value: "demo_db"
-        volumeMounts:
-        - name: mysql-secret
-          mountPath: "/run/secrets"
-          readOnly: true
-      volumes:
-      - name: mysql-secret
-        secret:
-          secretName: mysql-secret
 ---
 apiVersion: v1
 kind: Service
