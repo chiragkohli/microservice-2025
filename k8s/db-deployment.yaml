@@ -46,10 +46,10 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1"
-          volumes:
-          - name: mysql-storage
-            persistentVolumeClaim:
-            claimName: mysql-pvc
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
 ---
 apiVersion: v1
 kind: Service
