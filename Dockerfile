@@ -1,6 +1,6 @@
 FROM node:lts-alpine3.16
 
-ENV PORT = 3000
+ENV PORT=3000
 
 # Create and change to the app directory
 WORKDIR /app
