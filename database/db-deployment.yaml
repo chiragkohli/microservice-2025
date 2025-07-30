@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sqldb-deployment
+  name: mysqldb-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sqldb
+      app: mysqldb
   template:
     metadata:
       labels:
-        app: sqldb
+        app: mysqldb
     spec:
       containers:
-      - name: sqldb-container
+      - name: mysqldb-container
         image: chiragkohli29/sqldb:latest
         ports:
         - containerPort: 3306
@@ -26,10 +26,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sqldb-service
+  name: mysqldb-service
 spec:
   selector:
-    app: sqldb
+    app: mysqldb
   ports:
     - protocol: TCP
       port: 3306
