@@ -14,12 +14,12 @@ spec:
     spec:
       containers:
       - name: sqldb-container
-        image: chiragkohli29/sqldb:latest
+        image: mysql:8  # Use standard MySQL image for testing
         ports:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "yourpassword"  # Direct password for testing
+          value: "yourpassword"
         - name: MYSQL_DATABASE
           value: "demo_db"
 ---
