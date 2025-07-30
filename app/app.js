@@ -98,20 +98,3 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
-
-microservice-2025/
-├── app/
-│   ├── app.js
-│   ├── package.json
-│   └── Dockerfile
-├── database/
-│   ├── init.sql
-│   └── db-deployment.yaml
-├── kubernetes/
-│   ├── configmap.yaml
-│   ├── secret.yaml
-│   ├── api-deployment.yaml
-│   ├── api-service.yaml
-│   ├── ingress.yaml
-│   └── storage.yaml
-└── README.md
