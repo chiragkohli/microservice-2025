@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp-deployment
+  name: mynodeapp-deployment
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: myapp
+      app: mynodeapp
   template:
     metadata:
       labels:
-        app: myapp
+        app: mynodeapp
     spec:
       containers:
-      - name: myapp-container
-        image: chiragkohli29/myapp:latest
+      - name: mynodeapp-container
+        image: chiragkohli29/mynodeapp:latest
         ports:
         - containerPort: 3000
         env:
@@ -28,10 +28,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: myapp-service
+  name: mynodeapp-service
 spec:
   selector:
-    app: myapp
+    app: mynodeapp
   ports:
     - protocol: TCP
       port: 80
