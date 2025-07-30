@@ -3,7 +3,12 @@ kind: Deployment
 metadata:
   name: api-service-deployment
 spec:
-  replicas: 2
+  replicas: 4
+  strategy:    # Added rolling update strategy
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   selector:
     matchLabels:
       app: api-service
@@ -45,6 +50,13 @@ spec:
             secretKeyRef:
               name: api-secret
               key: DB_PASS
+        resources:
+          requests: 
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
 ---
 apiVersion: v1
 kind: Service
@@ -57,4 +69,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-  type: LoadBalancer
+  type: LoadBalancer # Exposed outside cluster
