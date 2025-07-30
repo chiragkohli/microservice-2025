@@ -19,7 +19,7 @@ spec:
         - containerPort: 3000
         env:
         - name: DB_HOST
-          value: "mysqldb-service"  # name of the DB service
+          value: "sqldb-service"  # name of the DB service
         - name: DB_USER
           value: "root"
         - name: DB_PASSWORD
