@@ -19,10 +19,7 @@ spec:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: mysql-root-password
+          value: "yourpassword"  # Direct password for testing
         - name: MYSQL_DATABASE
           value: "demo_db"
 ---
