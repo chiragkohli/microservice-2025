@@ -4,112 +4,44 @@ const mysql = require('mysql2/promise');
 const app = express();
 const port = 3000;
 
-// Database Configuration
+console.log('Process environments variables', process.env);
+
 const dbConfig = {
     host: process.env.DB_HOST || 'sqldb-service',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASS || 'password',
+    password: process.env.DB_PASS || 'yourpassword',
     database: process.env.DB_NAME || 'demo_db',
     port: process.env.DB_PORT || 3306,
     connectionLimit: 10,          // Connection pooling
     acquireTimeout: 60000,
-    queueLimit: 0
+    timeout: 60000,
+    reconnect: true
 };
 
-// Creating Database Connection
+// Create a new database connection pool
 const pool = mysql.createPool(dbConfig);
 
 const generateHtmlTable = (results) => {
-    if (!results || results.length === 0) {
-    return '<p style="text-align: center; color: #666;">No records found</p>';
-  }
+    let html = '<table border="1"><tr>';
 
-  let html = `
-    <style>
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-        font-size: 16px;
-        font-family: 'Arial', sans-serif;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        border-radius: 8px;
-        overflow: hidden;
-      }
-      .data-table thead {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-      }
-      .data-table th {
-        padding: 15px 12px;
-        text-align: left;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border: none;
-      }
-      .data-table td {
-        padding: 12px;
-        border-bottom: 1px solid #ddd;
-        transition: background-color 0.3s ease;
-      }
-      .data-table tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
-      }
-      .data-table tbody tr:hover {
-        background-color: #e3f2fd;
-        transform: scale(1.01);
-        transition: all 0.3s ease;
-      }
-      .data-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .record-count {
-        text-align: center;
-        margin: 10px 0;
-        color: #666;
-        font-style: italic;
-      }
-    </style>
-    <div class="record-count">Total Records: ${results.length}</div>
-    <table class="data-table">
-      <thead>
-        <tr>`;
-  
-  // Generate table headers
-  for (let column in results[0]) {
-    const formattedColumnName = column.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    html += `<th>${formattedColumnName}</th>`;
-  }
-  html += '</tr></thead><tbody>';
-
-  // Generate table rows
-  results.forEach(row => {
-    html += '<tr>';
-    for (let column in row) {
-      let cellValue = row[column];
-      
-      // Format different data types
-      if (cellValue === null) {
-        cellValue = '<span style="color: #999; font-style: italic;">N/A</span>';
-      } else if (column.includes('email')) {
-        cellValue = `<a href="mailto:${cellValue}" style="color: #1976d2; text-decoration: none;">${cellValue}</a>`;
-      } else if (column.includes('phone')) {
-        cellValue = `<a href="tel:${cellValue}" style="color: #1976d2; text-decoration: none;">${cellValue}</a>`;
-      } else if (column.includes('date') || column.includes('time')) {
-        cellValue = new Date(cellValue).toLocaleString();
-      }
-      
-      html += `<td>${cellValue}</td>`;
+    for (let column in results[0]) {
+        html += `<th>${column}</th>`;
     }
     html += '</tr>';
-  });
 
-  html += '</tbody></table>';
-  return html;
+    results.forEach(row => {
+        html += '<tr>';
+        for (let column in row) {
+            html += `<td>${row[column]}</td>`;
+        }
+        html += '</tr>';
+    });
+
+    html += '</table>';
+    return html;
 };
 
-// Route to get Records in JSON format
+// Route to fetch records
 app.get('/records', async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -123,180 +55,41 @@ app.get('/records', async (req, res) => {
     }
 });
 
-// Show records in Formatted HTML Table
+// Show records in pagination format , loading 5 incrementally
 app.get('/formatted-records', async (req, res) => {
     const connection = await pool.getConnection();
     try {
-        const [results] = await connection.query('SELECT * FROM customer_details');
+        let offset = parseInt(req.query.offset) || 0;
+        const [results] = await connection.query('SELECT * FROM customer_details LIMIT 5 OFFSET ?', [offset]);
         const htmlTable = generateHtmlTable(results);
         res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Customer Records</title>
-          <style>
-            body {
-              font-family: 'Arial', sans-serif;
-              margin: 0;
-              padding: 20px;
-              background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-              min-height: 100vh;
-            }
-            .container {
-              max-width: 1200px;
-              margin: 0 auto;
-              background: white;
-              border-radius: 12px;
-              box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-              overflow: hidden;
-            }
-            .header {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              padding: 30px;
-              text-align: center;
-            }
-            .header h1 {
-              margin: 0;
-              font-size: 2.5rem;
-              font-weight: 300;
-            }
-            .content {
-              padding: 30px;
-            }
-            .back-button {
-              display: inline-block;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              padding: 12px 24px;
-              text-decoration: none;
-              border-radius: 6px;
-              margin-top: 20px;
-              transition: transform 0.3s ease;
-              font-weight: 500;
-            }
-            .back-button:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Customer Records</h1>
-            </div>
-            <div class="content">
-              ${htmlTable}
-              <a href="/" class="back-button">← Back to Home</a>
-            </div>
-          </div>
-        </body>
-        </html>
+        <h1>Top Records</h1>
+        ${htmlTable}
+        <a href="/formatted-records?offset=${offset + 5}">More</a>
+        <br>
+        <a href="/">Back</a>
       `);
     } catch (err) {
-        res.status(500).send('Something went wrong!!');
+        console.error('Error executing query:', err);
+        res.status(500).send('Something went wrong! Please try again later.');
     } finally {
         connection.release();
     }
 });
 
-// Welcome page route
+// Landing welcome page route
 app.get('/', (req, res) => {
     res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Microservice API</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          margin: 0;
-          padding: 20px;
-          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-          min-height: 100vh;
-        }
-        .container {
-          max-width: 800px;
-          margin: 0 auto;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-          overflow: hidden;
-        }
-        .header {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 40px;
-          text-align: center;
-        }
-        .header h1 {
-          margin: 0;
-          font-size: 2.5rem;
-          font-weight: 300;
-        }
-        .content {
-          padding: 40px;
-        }
-        .api-list {
-          list-style: none;
-          padding: 0;
-        }
-        .api-item {
-          margin: 15px 0;
-        }
-        .api-link {
-          display: block;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 15px 20px;
-          text-decoration: none;
-          border-radius: 8px;
-          transition: transform 0.3s ease;
-          font-weight: 500;
-        }
-        .api-link:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        .api-description {
-          margin-top: 5px;
-          color: #666;
-          font-size: 14px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>🚀 Welcome to Microservice API</h1>
-        </div>
-        <div class="content">
-          <p style="font-size: 18px; color: #666; text-align: center; margin-bottom: 30px;">
-            Choose an API endpoint to explore customer data
-          </p>
-          <ul class="api-list">
-            <li class="api-item">
-              <a href="/records" class="api-link">📊 /records - JSON Data</a>
-              <p class="api-description">Get all customer records in JSON format</p>
-            </li>
-            <li class="api-item">
-              <a href="/formatted-records" class="api-link">📋 /formatted-records - Formatted Table</a>
-              <p class="api-description">View customer records in a beautifully formatted HTML table</p>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </body>
-    </html>
+    <h1>Hello, Welcome !!</h1>
+    <p>Available APIs:</p>
+    <ul>
+      <li><a href="/records">Records</a> - Get all records</li>
+      <li><a href="/formatted-records">Incremental records</a> - Show incremental records</li>
+    </ul>
   `);
 });
 
-// Generic Error Handling Middleware
+// Generic error handler
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     res.status(500).send('Something went wrong! Please try again later.');
