@@ -3,9 +3,9 @@ kind: Ingress
 metadata:
   name: api-service-ingress
   annotations:
-    kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.allow-http: "true"
 spec:
+  ingressClassName: "gce"
   rules:
   - http:  # Start without host - access via IP
       paths:
