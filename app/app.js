@@ -14,8 +14,7 @@ const dbConfig = {
     port: process.env.DB_PORT || 3306,
     connectionLimit: 10,          // Connection pooling
     acquireTimeout: 60000,
-    timeout: 60000,
-    reconnect: true
+    queueLimit: 0
 };
 
 // Create a new database connection pool
