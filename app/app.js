@@ -9,7 +9,7 @@ console.log('Process environments variables', process.env);
 const dbConfig = {
     host: process.env.DB_HOST || 'sqldb-service',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASS || 'yourpassword',
+    password: process.env.DB_PASS || 'password',
     database: process.env.DB_NAME || 'demo_db',
     port: process.env.DB_PORT || 3306,
     connectionLimit: 10,          // Connection pooling
@@ -21,27 +21,100 @@ const dbConfig = {
 // Create a new database connection pool
 const pool = mysql.createPool(dbConfig);
 
-const generateHtmlTable = (results) => {
-    let html = '<table border="1"><tr>';
+// const generateHtmlTable = (results) => {
+//     let html = '<table border="1"><tr>';
 
-    for (let column in results[0]) {
-        html += `<th>${column}</th>`;
+//     for (let column in results[0]) {
+//         html += `<th>${column}</th>`;
+//     }
+//     html += '</tr>';
+
+//     results.forEach(row => {
+//         html += '<tr>';
+//         for (let column in row) {
+//             html += `<td>${row[column]}</td>`;
+//         }
+//         html += '</tr>';
+//     });
+
+//     html += '</table>';
+//     return html;
+// };
+
+const generateStyledHtmlTable = (results) => {
+    if (!results || results.length === 0) {
+        return '<p style="text-align: center; color: #666;">No records found.</p>';
     }
-    html += '</tr>';
 
+    let html = `
+    <style>
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+            font-size: 14px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        .data-table th { 
+            background-color: #007bff; 
+            color: white; 
+            padding: 12px 8px; 
+            text-align: left; 
+            font-weight: bold; 
+            border-bottom: 2px solid #0056b3; 
+        }
+        .data-table td { 
+            padding: 10px 8px; 
+            border-bottom: 1px solid #ddd; 
+        }
+        .data-table tr:nth-child(even) { 
+            background-color: #f8f9fa; 
+        }
+        .data-table tr:hover { 
+            background-color: #e3f2fd; 
+        }
+        .data-table td:first-child { 
+            font-weight: bold; 
+            color: #007bff; 
+        }
+        @media (max-width: 768px) {
+            .data-table { 
+                font-size: 12px; 
+            }
+            .data-table th, .data-table td { 
+                padding: 8px 4px; 
+            }
+        }
+    </style>
+    <table class="data-table">
+        <thead>
+            <tr>`;
+
+    // Add table headers
+    for (let column in results[0]) {
+        html += `<th>${column.replace(/_/g, ' ').toUpperCase()}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+
+    // Add table rows
     results.forEach(row => {
         html += '<tr>';
         for (let column in row) {
-            html += `<td>${row[column]}</td>`;
+            let value = row[column];
+            // Format dates nicely
+            if (column === 'created_at' && value instanceof Date) {
+                value = value.toLocaleDateString() + ' ' + value.toLocaleTimeString();
+            }
+            html += `<td>${value || 'N/A'}</td>`;
         }
         html += '</tr>';
     });
 
-    html += '</table>';
+    html += '</tbody></table>';
     return html;
 };
 
-// Route to fetch records
+// Route to fetch records in JSON format
 app.get('/records', async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -55,37 +128,116 @@ app.get('/records', async (req, res) => {
     }
 });
 
-// Show records in pagination format , loading 5 incrementally
+// Show Formatted records in HTML table format
 app.get('/formatted-records', async (req, res) => {
     const connection = await pool.getConnection();
     try {
-        let offset = parseInt(req.query.offset) || 0;
-        const [results] = await connection.query('SELECT * FROM customer_details LIMIT 5 OFFSET ?', [offset]);
-        const htmlTable = generateHtmlTable(results);
+        const [results] = await connection.query('SELECT * FROM customer_details');
+        const htmlTable = generateStyledHtmlTable(results);
         res.send(`
-        <h1>Top Records</h1>
+        <h1>Records</h1>
         ${htmlTable}
-        <a href="/formatted-records?offset=${offset + 5}">More</a>
         <br>
         <a href="/">Back</a>
       `);
     } catch (err) {
         console.error('Error executing query:', err);
-        res.status(500).send('Something went wrong! Please try again later.');
+        res.status(500).send('Something went wrong!!');
     } finally {
         connection.release();
     }
 });
 
-// Landing welcome page route
+// Welcome page route
 app.get('/', (req, res) => {
     res.send(`
-    <h1>Hello, Welcome !!</h1>
-    <p>Available APIs:</p>
-    <ul>
-      <li><a href="/records">Records</a> - Get all records</li>
-      <li><a href="/formatted-records">Incremental records</a> - Show incremental records</li>
-    </ul>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Microservice API</title>
+      <style>
+        body {
+          font-family: 'Arial', sans-serif;
+          margin: 0;
+          padding: 20px;
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          min-height: 100vh;
+        }
+        .container {
+          max-width: 800px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+          overflow: hidden;
+        }
+        .header {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 40px;
+          text-align: center;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 2.5rem;
+          font-weight: 300;
+        }
+        .content {
+          padding: 40px;
+        }
+        .api-list {
+          list-style: none;
+          padding: 0;
+        }
+        .api-item {
+          margin: 15px 0;
+        }
+        .api-link {
+          display: block;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 15px 20px;
+          text-decoration: none;
+          border-radius: 8px;
+          transition: transform 0.3s ease;
+          font-weight: 500;
+        }
+        .api-link:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .api-description {
+          margin-top: 5px;
+          color: #666;
+          font-size: 14px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🚀 Welcome to Microservice API</h1>
+        </div>
+        <div class="content">
+          <p style="font-size: 18px; color: #666; text-align: center; margin-bottom: 30px;">
+            Choose an API endpoint to explore customer data
+          </p>
+          <ul class="api-list">
+            <li class="api-item">
+              <a href="/records" class="api-link">📊 /records - JSON Data</a>
+              <p class="api-description">Get all customer records in JSON format</p>
+            </li>
+            <li class="api-item">
+              <a href="/formatted-records" class="api-link">📋 /formatted-records - Formatted Table</a>
+              <p class="api-description">View customer records in a beautifully formatted HTML table</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </body>
+    </html>
   `);
 });
 
