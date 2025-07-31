@@ -1,27 +1,26 @@
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
 const app = express();
 const port = 3000;
 
 // Database Configuration
 const dbConfig = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME
+    host: process.env.DB_HOST || 'sqldb-service',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASS || 'password',
+    database: process.env.DB_NAME || 'demo_db',
+    port: process.env.DB_PORT || 3306,
+    connectionLimit: 10,          // Connection pooling
+    acquireTimeout: 60000,
+    queueLimit: 0
 };
 
 // Creating Database Connection
-const createDbConnection = () => {
-  return mysql.createConnection(dbConfig);
-};
-
-let dbConnection;
+const pool = mysql.createPool(dbConfig);
 
 const generateHtmlTable = (results) => {
-  if (!results || results.length === 0) {
+    if (!results || results.length === 0) {
     return '<p style="text-align: center; color: #666;">No records found</p>';
   }
 
@@ -110,58 +109,27 @@ const generateHtmlTable = (results) => {
   return html;
 };
 
-app.use((req, res, next) => {
-  if (!dbConnection) {
-    dbConnection = createDbConnection();
-
-    dbConnection.connect((err) => {
-      if (err) {
-        console.error('Error connecting to the database:', err);
-        dbConnection = null;
-        next();
-      } else {
-        console.log('Connected to the MySQL database.');
-        next();
-      }
-    });
-  } else {
-    next();
-  }
-});
-
-// Route to Get records
-app.get('/records', (req, res) => {
-
-  if (!dbConnection) {
-    res.status(500).send('Something went wrong! Please try again later.');
-    return;
-  }
-
-  const query = 'SELECT * FROM customer_accounts';
-  dbConnection.query(query, (error, results) => {
-    if (error) {
-      res.status(500).send('Error fetching records');
-      return;
+// Route to get Records in JSON format
+app.get('/records', async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        const [results] = await connection.query('SELECT * FROM customer_details');
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching records:', error);
+        res.status(500).send('Error fetching records');
+    } finally {
+        connection.release();
     }
-    res.json(results);
-  });
 });
 
-// Route to Get Formatted Records
-app.get('/formatted-records', (req, res) => {
-  if (!dbConnection) {
-    res.status(500).send('Something went wrong!');
-    return;
-  }
-
-  const query = 'SELECT * FROM customer_accounts';
-
-  dbConnection.query(query, (err, results) => {
-    if (err) {
-      res.status(500).send('Something went wrong!');
-    } else {
-      const htmlTable = generateHtmlTable(results);
-      res.send(`
+// Show records in Formatted HTML Table
+app.get('/formatted-records', async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        const [results] = await connection.query('SELECT * FROM customer_details');
+        const htmlTable = generateHtmlTable(results);
+        res.send(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -228,13 +196,16 @@ app.get('/formatted-records', (req, res) => {
         </body>
         </html>
       `);
+    } catch (err) {
+        res.status(500).send('Something went wrong!!');
+    } finally {
+        connection.release();
     }
-  });
 });
 
 // Welcome page route
 app.get('/', (req, res) => {
-  res.send(`
+    res.send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -327,10 +298,11 @@ app.get('/', (req, res) => {
 
 // Generic Error Handling Middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).send('Something went wrong! Please try again later.');
+    console.error('Unhandled error:', err);
+    res.status(500).send('Something went wrong! Please try again later.');
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });
+
