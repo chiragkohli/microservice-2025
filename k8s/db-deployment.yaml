@@ -9,8 +9,6 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: standard
-  hostPath:
-    path: /mnt/data/mysql
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
