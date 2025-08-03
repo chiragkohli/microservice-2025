@@ -1,0 +1,15 @@
+# Headless service for StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysqldb-service
+spec:
+  selector:
+    app: mysqldb
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+      name: mysql
+  type: ClusterIP
+  clusterIP: None  # Headless service
