@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: mysqldb-container
-          image: chiragkohli29/sqldb:latest
+          # image: chiragkohli29/sqldb:latest
+          image: mysql:8.0.32
           ports:
             - containerPort: 3306
               name: mysql
@@ -27,9 +28,14 @@ spec:
                   key: root-password
             - name: MYSQL_DATABASE
               value: demo_db
+          # volumeMounts:
+          # - name: mysql-storage
+          #   mountPath: /var/lib/mysql
           volumeMounts:
           - name: mysql-storage
             mountPath: /var/lib/mysql
+          - name: mysql-initdb
+            mountPath: /docker-entrypoint-initdb.d
           resources:
             requests:
               memory: "512Mi"
@@ -38,6 +44,9 @@ spec:
               memory: "1Gi"
               cpu: "1"
       volumes:
+      - name: mysql-initdb
+        configMap:
+          name: mysql-config
       - name: mysql-storage
         persistentVolumeClaim:
           claimName: mysql-pvc

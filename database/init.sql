@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS customer_details (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Insert sample data (8 records)
 INSERT IGNORE INTO customer_details (first_name, last_name, email, phone) VALUES
 ('Amit', 'Sharma', 'amit.sharma@example.com', '9876543210'),
 ('Priya', 'Verma', 'priya.verma@example.com', '9876501234'),
