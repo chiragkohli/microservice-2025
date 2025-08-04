@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: mysqldb-statefulset
 spec:
-  serviceName: "mysqldb-service"  # Required for StatefulSet
+  serviceName: "mysqldb-service"
   replicas: 1
   selector:
     matchLabels:
@@ -15,7 +15,6 @@ spec:
     spec:
       containers:
         - name: mysqldb-container
-          # image: chiragkohli29/sqldb:latest
           image: mysql:8.4.0
           ports:
             - containerPort: 3306
@@ -28,9 +27,6 @@ spec:
                   key: root-password
             - name: MYSQL_DATABASE
               value: demo_db
-          # volumeMounts:
-          # - name: mysql-storage
-          #   mountPath: /var/lib/mysql
           volumeMounts:
           - name: mysql-storage
             mountPath: /var/lib/mysql
@@ -50,8 +46,3 @@ spec:
       - name: mysql-storage
         persistentVolumeClaim:
           claimName: mysql-pvc
-  # StatefulSet update strategy
-  # updateStrategy:
-  #   type: RollingUpdate
-  #   rollingUpdate:
-  #     maxUnavailable: 1
