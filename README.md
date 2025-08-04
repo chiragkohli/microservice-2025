@@ -51,10 +51,10 @@ This project showcases a production-ready microservice architecture with:
 ## Repository and Docker URLs
 
 ### **Code Repository**
-- **GitHub**: [https://github.com/chiragkohli/microservice-2025]
+- **GitHub**: [Repo Link](https://github.com/chiragkohli/microservice-2025)
 
 ### **Docker Hub Images**
-- **API Service**: [chiragkohli29/api-service:latest](https://hub.docker.com/repository/docker/chiragkohli29/api-service)
+- **API Service**: [Docker Image](https://hub.docker.com/repository/docker/chiragkohli29/api-service)
 
 
 ## Quick Start
