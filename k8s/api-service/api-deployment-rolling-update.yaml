@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-service-deployment
+spec:
+  replicas: 4
+  strategy:    # Added rolling update strategy
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: api-service
+  template:
+    metadata:
+      labels:
+        app: api-service
+    spec:
+      containers:
+      - name: api-service-container
+        image: chiragkohli29/api-service:v1
+        ports:
+        - containerPort: 3000
+        env:
+        # Config separation - from ConfigMap
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: api-config
+              key: DB_HOST
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: api-config
+              key: DB_USER
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: api-config
+              key: DB_NAME
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: api-config
+              key: DB_PORT
+        # Sensitive data from Secret
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: api-secret
+              key: DB_PASS
+        resources:
+          requests: 
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
