@@ -21,25 +21,6 @@ const dbConfig = {
 // Create a new database connection pool
 const pool = mysql.createPool(dbConfig);
 
-// const generateHtmlTable = (results) => {
-//     let html = '<table border="1"><tr>';
-
-//     for (let column in results[0]) {
-//         html += `<th>${column}</th>`;
-//     }
-//     html += '</tr>';
-
-//     results.forEach(row => {
-//         html += '<tr>';
-//         for (let column in row) {
-//             html += `<td>${row[column]}</td>`;
-//         }
-//         html += '</tr>';
-//     });
-
-//     html += '</table>';
-//     return html;
-// };
 
 const generateStyledHtmlTable = (results) => {
     if (!results || results.length === 0) {
