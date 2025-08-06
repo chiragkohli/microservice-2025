@@ -86,6 +86,7 @@ kubectl get ingress api-service-ingress
 ## Service API Tier
 ### **Service API Endpoints** 
 *Access via Ingress External IP*
+*[http://34.102.206.186](http://34.102.206.186)*
 
 
 ## Configuration
@@ -108,4 +109,4 @@ kubectl get ingress api-service-ingress
 
 
 ## Video Demonstration
-- **Screen Recording:** [Video URL](<video-url>)
+- **Screen Recording:** [Demo URL](https://nagarro-my.sharepoint.com/:v:/p/chirag_kohli/EcoBreOLZ8tKooTJ_smC80wBKQMNPwc2-1QZSEVwNCWfzQ)
